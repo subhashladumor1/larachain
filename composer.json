@@ -1,0 +1,60 @@
+{
+    "name": "subhashladumor1/larachain",
+    "description": "LaraChain - LangChain-inspired AI orchestration framework for PHP and Laravel",
+    "type": "library",
+    "license": "MIT",
+    "version": "1.0.0",
+    "keywords": [
+        "laravel",
+        "laravel-ai",
+        "ai-orchestration",
+        "langchain-php",
+        "ai-agents",
+        "llm-chains",
+        "rag-framework",
+        "larachain",
+        "vector-search",
+        "ai-automation",
+        "intelligent-agents"
+    ],
+    "autoload": {
+        "psr-4": {
+            "LaraChain\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "LaraChain\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": "^8.0",
+        "illuminate/support": "^11.20|^12.0",
+        "illuminate/contracts": "^11.20|^12.0",
+        "laravel/ai": "^0.1.0"
+    },
+    "require-dev": {
+        "pestphp/pest": "^3.0",
+        "pestphp/pest-plugin-laravel": "^3.0",
+        "orchestra/testbench": "^9.0|^10.0",
+        "mockery/mockery": "^1.6"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "LaraChain\\Laravel\\AIServiceProvider"
+            ],
+            "aliases": {
+                "LaraChain": "LaraChain\\Laravel\\Facades\\LaraChain"
+            }
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/pest"
+    }
+}
