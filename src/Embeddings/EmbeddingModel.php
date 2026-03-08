@@ -3,14 +3,17 @@
 namespace LaraChain\Embeddings;
 
 use LaraChain\Contracts\EmbeddingInterface;
+use LaraChain\Contracts\RunnableInterface;
+use LaraChain\Support\HasPipe;
 
 /**
  * Class EmbeddingModel
  *
  * Provides embedding generation using Laravel AI SDK.
  */
-class EmbeddingModel implements EmbeddingInterface
+class EmbeddingModel implements EmbeddingInterface, RunnableInterface
 {
+    use HasPipe;
     protected string $model;
 
     /**

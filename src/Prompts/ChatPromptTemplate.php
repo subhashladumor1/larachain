@@ -4,13 +4,17 @@ namespace LaraChain\Prompts;
 
 use LaraChain\Contracts\MessageInterface;
 
+use LaraChain\Contracts\RunnableInterface;
+use LaraChain\Support\HasPipe;
+
 /**
  * Class ChatPromptTemplate
  *
  * Generates an array of messages dynamically.
  */
-class ChatPromptTemplate
+class ChatPromptTemplate implements RunnableInterface
 {
+    use HasPipe;
     /** @var array<int, array{string, string}> */
     protected array $messagesTemplate;
 

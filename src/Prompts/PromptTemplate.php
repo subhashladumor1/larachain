@@ -2,13 +2,17 @@
 
 namespace LaraChain\Prompts;
 
+use LaraChain\Contracts\RunnableInterface;
+use LaraChain\Support\HasPipe;
+
 /**
  * Class PromptTemplate
  *
  * Handles template variables for simple text prompts.
  */
-class PromptTemplate
+class PromptTemplate implements RunnableInterface
 {
+    use HasPipe;
     protected string $template;
 
     /**
