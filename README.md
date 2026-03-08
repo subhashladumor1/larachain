@@ -1,158 +1,190 @@
-# 🏗️ LaraChain (Beta)
+# 🏗️ LaraChain (Beta Version)
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/subhashladumor1/larachain.svg?style=flat-square)](https://packagist.org/packages/subhashladumor1/larachain)
 [![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/subhashladumor1/larachain/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/subhashladumor1/larachain/actions)
-[![Total Downloads](https://img.shields.io/packagist/dt/subhashladumor1/larachain.svg?style=flat-square)](https://packagist.org/packages/subhashladumor1/larachain)
 
-**LaraChain** is a powerful, LangChain-inspired AI orchestration framework built specifically for **Laravel 12**. It leverages the native **Laravel AI SDK** to provide a seamless way to build complex, multi-step AI agents, chains, and RAG (Retrieval-Augmented Generation) systems with professional-grade elegance.
+**LaraChain** is a LangChain-inspired AI orchestration framework built specifically for **Laravel 12**. In 2026, building AI apps is no longer just about calling an API—it's about building **Stateful Workflows**, **Agentic Tools**, and **Modern RAG pipelines**. LaraChain provides the primitives to build these with professional-grade elegance and type safety.
+
+---
+
+## 🗺️ How LaraChain Works
+
+LaraChain follows a "Runnable" architecture where every component—prompts, models, retrievers, and parsers—can be piped together.
+
+```mermaid
+graph LR
+    A[Input Variables] --> B[PromptTemplate]
+    B -->|Pipe| C[ChatModel]
+    C -->|Pipe| D[OutputParser]
+    D --> E[Final PHP Object]
+    
+    subgraph "The RAG Loop"
+        F[PDF/Web/CSV] --> G[TextSplitter]
+        G --> H[EmbeddingModel]
+        H --> I[VectorStore]
+        I -->|Retrieve| B
+    end
+```
 
 ---
 
 ## 🚀 Key Features
 
-- **Built for Laravel 12**: Native integration with `laravel/ai` and the `agent()` helper.
-- **Smart Agents (ReAct)**: Reasoning-based agents that can use tools and make decisions.
-- **Multi-Step Chains**: Combine multiple LLM prompts or logic steps into a single workflow.
-- **RAG Ready**: Built-in Vector Search, Embeddings, and Document Loaders (PDF, CSV, Web).
-- **Multi-Language Support**: Seamlessly handle prompts and responses in any language supported by the LLM.
-- **Pluggable Architecture**: Easily swap models, vector stores, or memory drivers.
+| Feature | Description |
+| :--- | :--- |
+| **LCEL-style Piping** | Use the `.pipe()` pattern to chain components like a pro. |
+| **Smart Agents** | ReAct (Reasoning + Acting) agents that use tools and make decisions. |
+| **Advanced RAG** | Document loaders, recursive text splitting, and vector retrieval. |
+| **Postgres Support** | Native `pgvector` integration for production-ready storage. |
+| **Memory Drivers** | Stateful conversation buffers to maintain context. |
+| **Laravel 12 Native** | Deeply integrated with the Laravel AI SDK and Service Container. |
 
 ---
 
-## 🗺️ Architecture Overview
+## 📂 Folder Structure
 
-```mermaid
-graph TD
-    User([User Input]) --> Router{Router Chain}
-    Router -- Reasoning --> Agent[ReAct Agent]
-    Router -- Fixed Flow --> Chain[Sequential Chain]
-    
-    Agent --> Tools[Tool Registry]
-    Agent --> Memory[Conversation Memory]
-    
-    Tools --> FileSystem[File Operations]
-    Tools --> Database[Database Access]
-    
-    Chain --> LLM1[Step 1: Analysis]
-    LLM1 --> LLM2[Step 2: Generation]
-    
-    subgraph RAG System
-        Docs[Documents] --> Loader[Document Loader]
-        Loader --> Embed[Embedding Model]
-        Embed --> Vector[In-Memory Vector Store]
-    end
-    
-    Vector --> Agent
-    Agent --> Response([Final Output])
+```text
+larachain/
+├── src/
+│   ├── Agents/           # ReAct and Agentic logic
+│   ├── Chains/           # Pipeline orchestration (Sequential, Router)
+│   ├── Contracts/        # Interfaces for all components
+│   ├── DocumentLoaders/  # Reading PDF, Web, CSV contents
+│   ├── Embeddings/       # Vector generation logic
+│   ├── Laravel/          # Service Providers and Facades
+│   ├── Memory/           # Conversation state management
+│   ├── Messages/         # Message objects (User, Assistant, System)
+│   ├── Models/           # AI Model wrappers (ChatModel)
+│   ├── Parsers/          # Output formatting (JSON, XML)
+│   ├── Prompts/          # Template management
+│   ├── Retrieval/        # Document retrieval logic
+│   ├── Support/          # Traits and Helpers (HasPipe)
+│   ├── TextSplitters/    # Document chunking logic
+│   ├── Toolkits/         # Grouped tools (File, Database)
+│   ├── Tools/            # Individual tool implementations
+│   └── VectorStores/     # Storage drivers (In-Memory, Postgres)
 ```
 
 ---
 
-## 🛠️ Installation
+## 📖 Functional API Guide
 
-> **Note:** LaraChain is currently in **Beta**. We recommend testing in a development environment.
-
-You can install the package via composer:
-
-```bash
-composer require subhashladumor1/larachain
-```
-
-The package will automatically register its service provider. You can publish the configuration file with:
-
-```bash
-php artisan vendor:publish --tag="larachain-config"
-```
-
----
-
-## 📖 Quick Start
-
-### 1. Simple LLM Chain
-Execute a prompt template with variable substitution.
+### 1. The Pipe Pattern (Recommended)
+The hallmark of LaraChain 2026 is the ability to chain components elegantly.
 
 ```php
 use LaraChain\Prompts\PromptTemplate;
-use LaraChain\Chains\LLMChain;
+use LaraChain\Models\ChatModel;
+use LaraChain\Parsers\JsonParser;
 
-$template = PromptTemplate::make('Translate the following text to {language}: {text}');
-$chain = new LLMChain($template, model: 'gpt-4o');
+$chain = PromptTemplate::make('Extract data from this text: {text} into JSON format.')
+    ->pipe(new ChatModel('gpt-4o'))
+    ->pipe(new JsonParser());
 
-$result = $chain->execute([
-    'language' => 'Spanish',
-    'text' => 'LaraChain makes AI orchestration easy!'
-]);
-
-echo $result; // "LaraChain hace que la orquestación de IA sea fácil."
+$output = $chain->invoke(['text' => 'My name is John and I live in London.']);
+// Returns: ['name' => 'John', 'location' => 'London']
 ```
 
-### 2. Intelligent ReAct Agent
-An agent that thinks, acts, and uses tools to answer questions.
+### 2. Intelligent Agents
+An agent can use specialized tools to complete complex tasks.
 
 ```php
 use LaraChain\Agents\AgentExecutor;
 use LaraChain\Toolkits\FileToolkit;
-use LaraChain\Memory\BufferMemory;
 
 $agent = AgentExecutor::make()
-    ->tools((new FileToolkit())->getTools()) // Give it file read/write powers
-    ->memory(new BufferMemory(limit: 10));
+    ->tools((new FileToolkit())->getTools());
 
-$response = $agent->run("Read the version in version.txt and write a summary in summary.md");
+$response = $agent->run("Read config.json and summarize it in readme.md");
+```
+
+### 3. RAG (Postgres + Recursive Chunking)
+Handle large documents with state-of-the-art chunking and production storage.
+
+```php
+use LaraChain\TextSplitters\RecursiveCharacterTextSplitter;
+use LaraChain\VectorStores\PostgresVectorStore;
+use LaraChain\Embeddings\EmbeddingModel;
+
+$splitter = new RecursiveCharacterTextSplitter(chunkSize: 1000, chunkOverlap: 200);
+$chunks = $splitter->splitText($largePdfContent);
+
+$store = new PostgresVectorStore(new EmbeddingModel());
+$store->addTexts($chunks);
 ```
 
 ---
 
-## 🌍 Multi-Language Support
+## ⚖️ LaraChain vs. LangChain (For Laravel)
 
-LaraChain is designed to be globally ready. Since it is built on top of the Laravel AI SDK, it inherits the broad linguistic capabilities of modern LLMs.
-
-- **Non-English Prompts**: You can write your `PromptTemplates` in Hindi, Spanish, French, Japanese, etc.
-- **Cross-Lang Reasoning**: Agents can process a question in one language and search documents in another.
-- **UTF-8 Native**: All internal parsers and message objects handle multi-byte characters perfectly.
+| Feature | LangChain (Python/JS) | **LaraChain (PHP/Laravel)** |
+| :--- | :--- | :--- |
+| **Syntax** | Pipe Operator (`\|`) | Fluent `.pipe()` Method |
+| **Integration** | Ad-hoc | Native Service Providers / Facades |
+| **I/O** | General | Laravel FileSystem / DB Facades |
+| **Agents** | LangGraph | ReAct / Future LaraGraph |
+| **Models** | Custom Drivers | Laravel AI SDK (Native) |
 
 ---
 
 ## 📈 Use Cases
 
-1.  **Automated Customer Support**: Combine a `RouterChain` to distinguish between "Tech Support" and "Billing", then use a `VectorRetriever` to pull answers from your documentation.
-2.  **Content Transformation Pipelines**: Use a `SequentialChain` to:
-    - Step 1: Extract keywords from an article.
-    - Step 2: Translate those keywords.
-    - Step 3: Generate a meta-description based on them.
-3.  **Autonomous File Assistants**: Give an agent a `FileToolkit` to help reorganize project files or generate code documentation.
+1.  **Semantic Document Search**: Build a "Chat with your PDF" app in minutes using `RecursiveSplitter` and `PostgresVectorStore`.
+2.  **Autonomous Code Auditor**: Use the `FileToolkit` and `AgentExecutor` to scan your repository for security flaws.
+3.  **Structured Data Extraction**: Pipe raw OCR text through a `ChatModel` and `JsonParser` to ingest invoices into your database.
+
+---
+
+## 🛠️ Installation & Setup
+
+```bash
+composer require subhashladumor1/larachain
+php artisan vendor:publish --tag="larachain-config"
+```
+
+Refer to [LARACHAIN_VERIFICATION_2026.md](LARACHAIN_VERIFICATION_2026.md) for detailed verification of all 2026 market features.
+
+---
+
+## 🛠️ Multi-Provider Management
+
+LaraChain uses a **Driver-based Architecture** (similar to Laravel's Database or Mail systems). You can configure and switch between providers at runtime.
+
+### 1. Configuration (`config/larachain.php`)
+Define multiple LLM, Vector, and Embedding providers:
+
+```php
+'default' => [
+    'llm' => 'openai',
+    'vectorstore' => 'postgres',
+],
+
+'llms' => [
+    'openai' => ['model' => 'gpt-4o'],
+    'anthropic' => ['model' => 'claude-3-5-sonnet'],
+],
+```
+
+### 2. Switching Providers at Runtime
+Use the `LaraChain` facade to swap drivers dynamically:
+
+```php
+// Use Anthropic instead of the default OpenAI
+$model = LaraChain::model('anthropic');
+
+// Use a specific vector store
+$vectorStore = LaraChain::vectors()->driver('memory');
+
+// Chain them together
+$chain = PromptTemplate::make('Hello {name}')
+    ->pipe($model)
+    ->pipe(new JsonParser());
+```
 
 ---
 
 ## ⚙️ Configuration
-
-Your `config/larachain.php` allows you to set global defaults:
-
-```php
-return [
-    'default_model' => env('LARACHAIN_MODEL', 'gpt-4o'),
-    'default_embedding_model' => env('LARACHAIN_EMBEDDING_MODEL', 'text-embedding-3-small'),
-];
-```
-
----
-
-## 🧪 Testing
-
-LaraChain comes with a comprehensive test suite. To run it:
-
-```bash
-composer test
-```
-
-We use **Pest** for testing and **Prism** for mocking AI responses to ensure your CI/CD pipelines don't require actual API keys.
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Pull requests for new Vector Drivers (Pinecone, Qdrant) are prioritized.
 
 ## 📄 License
-
-The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+The MIT License (MIT). See [License File](LICENSE.md).
